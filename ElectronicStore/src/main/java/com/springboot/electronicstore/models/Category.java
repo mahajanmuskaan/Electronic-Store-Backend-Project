@@ -1,8 +1,13 @@
 package com.springboot.electronicstore.models;
 
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,4 +44,7 @@ public class Category {
     // JPA annotation to specify the column name in the database
     @Column(name = "category_image")
     private String categoryImage;
+    
+    @OneToMany(mappedBy = "categorys", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Product> products = new ArrayList<>();
 }

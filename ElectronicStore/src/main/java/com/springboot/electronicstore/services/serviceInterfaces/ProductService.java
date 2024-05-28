@@ -19,4 +19,10 @@ public interface ProductService {
 	
 	// Get List of all products
 	List<ProductDto> getAllProducts(int pageNumber, int pageSize, String sortBy, String sortDir);
+	
+	// Create Product with Category
+	ProductDto createProductWithCategory(ProductDto product, String categoryId);
+	
+	// Update Category in product
+	ProductDto updateCategoryProduct(String productId, String categoryId);
 }

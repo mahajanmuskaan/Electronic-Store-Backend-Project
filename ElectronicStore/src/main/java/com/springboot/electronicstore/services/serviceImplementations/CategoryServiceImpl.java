@@ -29,107 +29,127 @@ import com.springboot.electronicstore.services.serviceInterfaces.CategoryService
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
-    // Inject the relative path for storing category images from application properties
-    @Value("${category.profile.image.path}")
-    private String relativePath;
+	// Inject the relative path for storing category images from application
+	// properties
+	@Value("${category.profile.image.path}")
+	private String relativePath;
 
-    // Autowire the CategoryRepository to perform database operations
-    @Autowired
-    private CategoryRepository categoryRepo;
+	// Autowire the CategoryRepository to perform database operations
+	@Autowired
+	private CategoryRepository categoryRepo;
 
-    // Autowire the ModelMapper to convert between entity and DTO
-    @Autowired
-    private ModelMapper mapper;
+	// Autowire the ModelMapper to convert between entity and DTO
+	@Autowired
+	private ModelMapper mapper;
 
-    // Method to create and save a new category
-    @Override
-    public CategoryDto createCategory(CategoryDto category) {
-        // Generate a unique ID for the new category
-        String categoryId = UUID.randomUUID().toString();
-        category.setCategoryId(categoryId);
+	// Method to create and save a new category
+	@Override
+	public CategoryDto createCategory(CategoryDto category) {
+		// Generate a unique ID for the new category
+		String categoryId = UUID.randomUUID().toString();
+		category.setCategoryId(categoryId);
 
-        // Convert DTO to entity
-        Category categoryEntity = mapper.map(category, Category.class);
-        Category savedCategory = categoryRepo.save(categoryEntity);
+		// Convert DTO to entity
+		Category categoryEntity = mapper.map(category, Category.class);
+		Category savedCategory = categoryRepo.save(categoryEntity);
 
-        // Convert entity back to DTO
-        return mapper.map(savedCategory, CategoryDto.class);
-    }
+		// Convert entity back to DTO
+		return mapper.map(savedCategory, CategoryDto.class);
+	}
 
-    // Method to update an existing category by its ID
-    @Override
-    public CategoryDto updateCategory(CategoryDto category, String categoryId) {
-        // Find the existing category or throw an exception if not found
-        Category foundCategory = categoryRepo.findById(categoryId).orElseThrow(
-                () -> new ResourceNotFoundException("Category with the given id: " + categoryId + " not found!!"));
+	// Method to update an existing category by its ID
+	@Override
+	public CategoryDto updateCategory(CategoryDto category, String categoryId) {
+		// Find the existing category or throw an exception if not found
+		Category foundCategory = categoryRepo.findById(categoryId).orElseThrow(
+				() -> new ResourceNotFoundException("Category with the given id: " + categoryId + " not found!!"));
 
-        // Update the category's details
-        foundCategory.setCategoryId(category.getCategoryId());
-        foundCategory.setCategoryTitle(category.getCategoryTitle());
-        foundCategory.setCategoryDescription(category.getCategoryDescription());
-        foundCategory.setCategoryImage(category.getCategoryImage());
+		// Update the category's details
+		foundCategory.setCategoryId(category.getCategoryId());
+		foundCategory.setCategoryTitle(category.getCategoryTitle());
+		foundCategory.setCategoryDescription(category.getCategoryDescription());
+		foundCategory.setCategoryImage(category.getCategoryImage());
 
-        // Save the updated category entity
-        Category updatedCategory = categoryRepo.save(foundCategory);
+		// Save the updated category entity
+		Category updatedCategory = categoryRepo.save(foundCategory);
 
-        // Convert entity back to DTO
-        return mapper.map(updatedCategory, CategoryDto.class);
-    }
+		// Convert entity back to DTO
+		return mapper.map(updatedCategory, CategoryDto.class);
+	}
 
-    // Method to delete an existing category by its ID
-    @Override
-    public void deleteCategory(String categoryId) {
-        // Find the existing category or throw an exception if not found
-        Category foundCategory = categoryRepo.findById(categoryId).orElseThrow(
-                () -> new ResourceNotFoundException("Category with the given id: " + categoryId + " not found!!"));
+	// Method to delete an existing category by its ID
+	@Override
+	public void deleteCategory(String categoryId) {
+		// Find the existing category or throw an exception if not found
+		Category foundCategory = categoryRepo.findById(categoryId).orElseThrow(
+				() -> new ResourceNotFoundException("Category with the given id: " + categoryId + " not found!!"));
 
-        // Get full path of image folder and concatenate with image filename
-        Path directoryPath = Paths.get(System.getProperty("user.dir"), relativePath);
-        String fullpath = directoryPath + File.separator + foundCategory.getCategoryImage();
-        Path imagePath = Paths.get(fullpath);
+		// Get full path of image folder and concatenate with image filename
+		Path directoryPath = Paths.get(System.getProperty("user.dir"), relativePath);
+		String fullpath = directoryPath + File.separator + foundCategory.getCategoryImage();
+		Path imagePath = Paths.get(fullpath);
 
-        // Delete category image file
-        try {
-            Files.delete(imagePath);
-        } catch (NoSuchFileException ex) {
-            // Handle case where file to delete is missing
-            ex.printStackTrace();
-        } catch (IOException e) {
-            // Handle other I/O errors
-            e.printStackTrace();
-        }
+		// Delete category image file
+		// Retry mechanism for file deletion
+		int maxRetries = 5;
+		int retryCount = 0;
+		boolean fileDeleted = false;
 
-        // Delete the category entity
-        categoryRepo.delete(foundCategory);
-    }
+		while (retryCount < maxRetries && !fileDeleted) {
+			try {
+				Files.delete(imagePath);
+				fileDeleted = true;
+			} catch (NoSuchFileException ex) {
+				// Handle case where file to delete is missing
+				ex.printStackTrace();
+				break; // No need to retry if the file doesn't exist
+			} catch (IOException e) {
+				// Handle other I/O errors
+				e.printStackTrace();
+				retryCount++;
+				try {
+					Thread.sleep(1000); // Wait for 1 second before retrying
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+					throw new RuntimeException("Thread interrupted", ie);
+				}
+			}
+		}
 
-    // Method to retrieve a category by its ID
-    @Override
-    public CategoryDto getCategory(String categoryId) {
-        // Find the category entity by ID or throw an exception if not found
-        Category foundCategory = categoryRepo.findById(categoryId).orElseThrow(
-                () -> new ResourceNotFoundException("Category with the given id: " + categoryId + " not found!!"));
+		if (!fileDeleted) {
+			throw new RuntimeException("Failed to delete the file after " + maxRetries + " attempts");
+		}
 
-        // Convert entity to DTO
-        return mapper.map(foundCategory, CategoryDto.class);
-    }
+		// Delete the category entity
+		categoryRepo.delete(foundCategory);
+	}
 
-    // Method to retrieve a list of all categories with pagination and sorting
-    @Override
-    public List<CategoryDto> getAllCategories(int pageNumber, int pageSize, String sortBy, String sortDir) {
-        // Determine the sort direction
-        Sort sort = (sortDir.equalsIgnoreCase("asc")) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+	// Method to retrieve a category by its ID
+	@Override
+	public CategoryDto getCategory(String categoryId) {
+		// Find the category entity by ID or throw an exception if not found
+		Category foundCategory = categoryRepo.findById(categoryId).orElseThrow(
+				() -> new ResourceNotFoundException("Category with the given id: " + categoryId + " not found!!"));
 
-        // Create a Pageable object with the page number, page size, and sort direction
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+		// Convert entity to DTO
+		return mapper.map(foundCategory, CategoryDto.class);
+	}
 
-        // Retrieve the paginated list of category entities from the repository
-        Page<Category> page = categoryRepo.findAll(pageable);
-        List<Category> allCategories = page.getContent();
+	// Method to retrieve a list of all categories with pagination and sorting
+	@Override
+	public List<CategoryDto> getAllCategories(int pageNumber, int pageSize, String sortBy, String sortDir) {
+		// Determine the sort direction
+		Sort sort = (sortDir.equalsIgnoreCase("asc")) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
-        // Convert the list of category entities to a list of DTOs
-        return allCategories.stream()
-                .map(category -> mapper.map(category, CategoryDto.class))
-                .collect(Collectors.toList());
-    }
+		// Create a Pageable object with the page number, page size, and sort direction
+		Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+
+		// Retrieve the paginated list of category entities from the repository
+		Page<Category> page = categoryRepo.findAll(pageable);
+		List<Category> allCategories = page.getContent();
+
+		// Convert the list of category entities to a list of DTOs
+		return allCategories.stream().map(category -> mapper.map(category, CategoryDto.class))
+				.collect(Collectors.toList());
+	}
 }

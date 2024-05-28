@@ -2,7 +2,10 @@ package com.springboot.electronicstore.dtos;
 
 import java.util.Date;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.springboot.electronicstore.models.Category;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -38,5 +41,9 @@ public class ProductDto {
 	private boolean productIsLive;
 
 	private boolean productInStock;
+	
+	private String productImage;
+	
+	private CategoryDto categorys;
 
 }

@@ -109,14 +109,34 @@ public class UserServiceImpl implements UserService {
 		Path imagePath = Paths.get(fullpath);
 
 		// Delete User Image file
-		try {
-			Files.delete(imagePath);
-		} catch (NoSuchFileException ex) {
-			// Handle case where file to delete is missing
-			ex.printStackTrace();
-		} catch (IOException e) {
-			// Handle other I/O errors
-			e.printStackTrace();
+		// Retry mechanism for file deletion
+		int maxRetries = 5;
+		int retryCount = 0;
+		boolean fileDeleted = false;
+
+		while (retryCount < maxRetries && !fileDeleted) {
+			try {
+				Files.delete(imagePath);
+				fileDeleted = true;
+			} catch (NoSuchFileException ex) {
+				// Handle case where file to delete is missing
+				ex.printStackTrace();
+				break; // No need to retry if the file doesn't exist
+			} catch (IOException e) {
+				// Handle other I/O errors
+				e.printStackTrace();
+				retryCount++;
+				try {
+					Thread.sleep(1000); // Wait for 1 second before retrying
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+					throw new RuntimeException("Thread interrupted", ie);
+				}
+			}
+		}
+
+		if (!fileDeleted) {
+			throw new RuntimeException("Failed to delete the file after " + maxRetries + " attempts");
 		}
 
 		// Delete the user entity

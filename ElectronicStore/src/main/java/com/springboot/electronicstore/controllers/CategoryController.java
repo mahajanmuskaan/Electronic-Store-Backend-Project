@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.springboot.electronicstore.dtos.CategoryDto;
+import com.springboot.electronicstore.dtos.ProductDto;
 import com.springboot.electronicstore.dtos.UserDto;
 import com.springboot.electronicstore.generalMessage.ApiResponseMessage;
 import com.springboot.electronicstore.generalMessage.ImageResponseMessage;
 import com.springboot.electronicstore.services.serviceInterfaces.CategoryService;
 import com.springboot.electronicstore.services.serviceInterfaces.FileService;
+import com.springboot.electronicstore.services.serviceInterfaces.ProductService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -45,6 +47,9 @@ public class CategoryController {
 
 	@Value("${category.profile.image.path}")
 	private String fileUploadPath;
+	
+	@Autowired
+	private ProductService productService;
 
     // Create a new category
     @PostMapping
@@ -97,7 +102,7 @@ public class CategoryController {
 		// Upload the category image file
 		String categoryImageName = fileService.uploadFile(categoryImage, fileUploadPath);
 
-		// Update the user's image name in the database
+		// Update the category's image name in the database
 		CategoryDto category = categoryService.getCategory(categoryId);
 		category.setCategoryImage(categoryImageName);
 		categoryService.updateCategory(category, categoryId);
@@ -124,4 +129,19 @@ public class CategoryController {
 		// Copy the image input stream to the response output stream
 		StreamUtils.copy(resource, response.getOutputStream());
 	}
+	
+	// Create Product with Category
+		@PostMapping("/{categoryId}/product")
+		public ResponseEntity<ProductDto> createProductWithCategory(@PathVariable String categoryId,
+				@RequestBody ProductDto product) {
+
+			return new ResponseEntity<>(productService.createProductWithCategory(product, categoryId), HttpStatus.CREATED);
+
+		}
+		
+	// Update category in product
+		@PutMapping("/{categoryId}/product/{productId}")
+		public ResponseEntity<ProductDto> updateCategoryInProduct(@PathVariable String productId,@PathVariable String categoryId){
+			return new ResponseEntity<>(productService.updateCategoryProduct(productId, categoryId), HttpStatus.OK);
+		}
 }
