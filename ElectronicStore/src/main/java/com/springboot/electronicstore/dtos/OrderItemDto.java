@@ -1,10 +1,5 @@
 package com.springboot.electronicstore.dtos;
 
-import java.util.Date;
-import java.util.List;
-
-import com.springboot.electronicstore.models.Cart;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,16 +12,16 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-// This entity defines which cart will what items in specified quantities;
 
-public class CartItemDto {
+public class OrderItemDto {
+	private int orderItemId;
 
-	private int cartItemId;
+	private int quantity;
 
-	private ProductDto cartItemProduct;
+	private int totalPrice;
 
-	private int cartItemQuantity;
+	private ProductDto products;
 
-	private int cartItemTotalPrice;
+	//private OrderDto orders;
 
 }

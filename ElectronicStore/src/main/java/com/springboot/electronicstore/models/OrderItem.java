@@ -1,9 +1,7 @@
 package com.springboot.electronicstore.models;
 
-import java.util.Date;
 
-import com.springboot.electronicstore.dtos.ProductDto;
-
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,28 +25,26 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 
-//This entity defines which cart will have what items in specified quantities;
-
 @Entity
-public class CartItem {
+@Table
+public class OrderItem {
 	
 	@Id
+	@Column(name="orderItem_id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name="cartitem_id")
-	private int cartItemId;
+	private int orderItemId;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@Column(name="orderItem_quantity")
+	private int quantity;
+	
+	@Column(name="orderItem_totalPrice")
+	private int totalPrice;
+	
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="product_id")
-	private Product cartItemProduct;
-	
-	@Column(name="cartitem_quantity")
-	private int cartItemQuantity;
-	
-	@Column(name="cartitem_totalprice")
-	private int cartItemTotalPrice;
-	
+	private Product products;
+
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name="cart_id")
-	private Cart carts;
-	
+	@JoinColumn(name="order_id")
+	private Order orders;
 }

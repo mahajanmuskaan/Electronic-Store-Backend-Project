@@ -17,9 +17,12 @@ public interface CartService {
 	CartDto addItemToCart(String userId, AddItemsToCartRequest request);
 
 	// Remove Items from Cart
-	void removeItemFromCart(String userId, int cartItem);
+	void removeItemFromCart(String userId, int cartItemId);
 
 	// Clear Cart
 	void clearCart(String userId);
+	
+	// Get cart by user
+	CartDto getCartByUser(String userId);
 
 }
