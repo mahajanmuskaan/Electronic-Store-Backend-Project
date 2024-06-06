@@ -16,8 +16,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.springboot.electronicstore.dtos.UserDto;
@@ -31,9 +29,6 @@ import com.springboot.electronicstore.services.serviceInterfaces.UserService;
  */
 @Service
 public class UserServiceImpl implements UserService {
-	
-	@Autowired
-	private PasswordEncoder passwordEncoder;
 
 	@Value("${user.profile.image.path}")
 	private String relativePath;
@@ -57,9 +52,6 @@ public class UserServiceImpl implements UserService {
 		// Generate a unique ID for the new user
 		String userid = UUID.randomUUID().toString();
 		userdto.setUserId(userid);
-		
-		// Encode the password
-		userdto.setUserPassword(passwordEncoder.encode(userdto.getUserPassword()));
 
 		// Convert DTO to entity
 		User user = dtoToEntity(userdto);
@@ -206,8 +198,8 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserDto getUserByEmail(String userEmail) {
 		// Find the user entity by email or throw an exception if not found
-		User foundUser = userRepository.findByUserEmail(userEmail).orElseThrow(()-> new UsernameNotFoundException("User with given email is not found!!"));
-
+		User foundUser = userRepository.findByUserEmail(userEmail)
+				.orElseThrow(() -> new ResourceNotFoundException("No user found."));
 		// Convert entity to DTO
 		UserDto foundUserDto = entityToDto(foundUser);
 
