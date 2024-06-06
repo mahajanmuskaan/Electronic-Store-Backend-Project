@@ -61,6 +61,6 @@ To get a local copy up and running, follow these steps.
 
 ## Contact
 
-Muskaan Mahajan - [LinkedIn][(https://www.linkedin.com/in/muskaan-mahajan-196578213/)] - er.muskaan21@gmail.com
+Muskaan Mahajan - [LinkedIn](https://www.linkedin.com/in/muskaan-mahajan-196578213/) - er.muskaan21@gmail.com
 
 Project Link: [https://github.com/mahajanmuskaan/Electronic-Store-Backend-Project](https://github.com/mahajanmuskaan/Electronic-Store-Backend-Project)
